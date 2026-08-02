@@ -1,0 +1,30 @@
+# Inference dependencies.
+#
+# Versions are floors rather than exact pins so that pip can resolve a set that
+# matches whichever Python you installed. torch and torchvision must agree with
+# each other; asking for both without exact pins lets the resolver pick a
+# matched pair, which is more robust than naming versions that may not have a
+# wheel for your interpreter.
+#
+# If resolution ever misbehaves, use requirements-locked.txt instead — those are
+# exact versions known to work together on Python 3.12.
+#
+# opacus is deliberately absent. The exported head has clean keys
+# (img_head.weight, ...) with the Opacus wrapper already stripped at export, so
+# inference needs no differential-privacy library at all.
+
+torch>=2.2,<3
+torchvision>=0.17,<1
+
+transformers>=4.35,<5
+torchxrayvision>=1.2
+tokenizers>=0.15
+
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+pydantic>=2.6
+
+pillow>=10.0
+numpy>=1.24
+matplotlib>=3.7

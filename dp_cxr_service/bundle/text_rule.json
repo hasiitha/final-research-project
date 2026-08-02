@@ -1,0 +1,5 @@
+{
+  "pre_sections": "(?:CLINICAL HISTORY|HISTORY|INDICATION|REASON FOR EXAM(?:INATION)?|TECHNIQUE|COMPARISON|PROCEDURE COMMENTS)",
+  "all_headers": "(?:NARRATIVE|CLINICAL HISTORY|HISTORY|INDICATION|REASON FOR EXAM(?:INATION)?|TECHNIQUE|COMPARISON|PROCEDURE COMMENTS|FINDINGS|IMPRESSION|END OF IMPRESSION|SUMMARY|ACCESSION NUMBER)",
+  "note": "Identical to \u00a71.7. The model never saw Findings or Impression; feeding them at inference reintroduces the label leakage this study was designed to remove."
+}

@@ -1,0 +1,20 @@
+# Normalise line endings so the repo is identical on macOS, Linux and Windows.
+* text=auto eol=lf
+
+# Shell scripts must keep LF or they will not run.
+*.sh    text eol=lf
+
+# Binary — never diff, never touch line endings.
+*.pth   binary
+*.pt    binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pdf   binary
+*.zip   binary
+*.ipynb binary
+
+# Lockfiles are generated; collapse them in pull-request diffs.
+package-lock.json          linguist-generated=true
+requirements-locked.txt    linguist-generated=true

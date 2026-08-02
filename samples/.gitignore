@@ -1,0 +1,7 @@
+# A radiograph dropped in here must not be committed — CheXpert Plus is used
+# under a research-use agreement that forbids redistributing the images.
+*.jpg
+*.jpeg
+*.png
+*.dcm
+*.dicom

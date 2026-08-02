@@ -1,0 +1,129 @@
+{
+  "model": "dp_f_late_fusion_tuned",
+  "created_utc": "2026-07-27T17:52:17.326058Z",
+  "task": "Multilabel chest-pathology prediction from a frontal radiograph and/or pre-diagnostic report text",
+  "labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Consolidation",
+    "Edema",
+    "Pleural Effusion"
+  ],
+  "architecture": {
+    "image_encoder": "TorchXRayVision DenseNet-121 (densenet121-res224-all), frozen",
+    "text_encoder": "emilyalsentzer/Bio_ClinicalBERT, frozen, [CLS] pooling",
+    "fusion": "late",
+    "trained_component": "classification head only"
+  },
+  "privacy": {
+    "mechanism": "DP-SGD (Opacus)",
+    "placement": "DP-F",
+    "target_epsilon": 8.0,
+    "achieved_epsilon": 7.9963673844135,
+    "delta": 1e-05,
+    "noise_multiplier": 0.85968017578125,
+    "max_grad_norm": 1.0,
+    "sample_rate": 0.026510640501216796,
+    "accountant": "rdp",
+    "privacy_unit": "example-level; example = STUDY (both views + report)"
+  },
+  "performance": {
+    "macro_auroc": 0.7917128428181168,
+    "macro_auprc": 0.2493167447488645,
+    "macro_f1": 0.30513483455631646,
+    "ece": 0.01453809574239391,
+    "mean_brier": 0.04607515711826108,
+    "per_label": [
+      {
+        "label": "Atelectasis",
+        "positive_rate": 0.0428436920046806,
+        "n_positive": 182,
+        "threshold": 0.0699999999999999,
+        "auroc": 0.7383339729626007,
+        "auprc": 0.1186281211289828,
+        "f1": 0.1983695652173913,
+        "precision": 0.131768953068592,
+        "recall": 0.4010989010989011,
+        "brier": 0.0397069784528135
+      },
+      {
+        "label": "Cardiomegaly",
+        "positive_rate": 0.048258002847433,
+        "n_positive": 205,
+        "threshold": 0.12,
+        "auroc": 0.7989623739917834,
+        "auprc": 0.2153621421566778,
+        "f1": 0.2595419847328244,
+        "precision": 0.2131661442006269,
+        "recall": 0.3317073170731707,
+        "brier": 0.0421704064951403
+      },
+      {
+        "label": "Consolidation",
+        "positive_rate": 0.0216572508215904,
+        "n_positive": 92,
+        "threshold": 0.04,
+        "auroc": 0.7599907938234924,
+        "auprc": 0.0640882809435249,
+        "f1": 0.1196013289036544,
+        "precision": 0.0861244019138756,
+        "recall": 0.1956521739130435,
+        "brier": 0.0208911956835677
+      },
+      {
+        "label": "Edema",
+        "positive_rate": 0.0567325800657272,
+        "n_positive": 241,
+        "threshold": 0.11,
+        "auroc": 0.8148561593974031,
+        "auprc": 0.2808380398983803,
+        "f1": 0.3574593796159527,
+        "precision": 0.2775229357798165,
+        "recall": 0.5020746887966805,
+        "brier": 0.0472137861963447
+      },
+      {
+        "label": "Pleural Effusion",
+        "positive_rate": 0.134887009859085,
+        "n_positive": 573,
+        "threshold": 0.29,
+        "auroc": 0.8464209139153044,
+        "auprc": 0.5676671396167564,
+        "f1": 0.5907019143117593,
+        "precision": 0.6183206106870229,
+        "recall": 0.5654450261780105,
+        "brier": 0.0803934187634389
+      }
+    ]
+  },
+  "explainability": {
+    "gradcam_top10_iou_vs_nonprivate": NaN,
+    "token_rank_spearman_vs_nonprivate": NaN,
+    "modality_ablation": {}
+  },
+  "selection": {
+    "method": "composite score",
+    "weights": {
+      "macro_auroc": 0.4,
+      "ece": 0.25,
+      "cam_top10_iou": 0.2,
+      "token_spearman": 0.15
+    },
+    "composite_score": 0.7142386735113655,
+    "eligible_pool": "DP-trained fusion runs only"
+  },
+  "data": {
+    "source": "CheXpert Plus (Stanford AIMI) via Redivis",
+    "example_unit": "study (frontal + lateral where present, one report)",
+    "text": "pre-diagnostic sections only \u2014 Findings and Impression removed",
+    "label_policy": "U-Zero (uncertain -> 0, missing -> 0)",
+    "n_train": 19313
+  },
+  "intended_use": "Research demonstration for an MSc dissertation. NOT a medical device and not validated for clinical use. Outputs are not a diagnosis and must not inform patient care.",
+  "limitations": [
+    "Trained on a single institution (Stanford); performance elsewhere is unknown.",
+    "Rare findings (Pneumonia ~0.4% prevalence) are far less reliable than common ones.",
+    "Text-only and image-only requests are out-of-distribution relative to training, which used both; see the missing-modality stress test for the expected drop.",
+    "DP noise degrades rare-class performance disproportionately."
+  ]
+}

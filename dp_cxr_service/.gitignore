@@ -1,0 +1,25 @@
+# Backend-local rules. The repository root .gitignore covers the rest.
+
+# Frozen-encoder download cache (~830 MB of public checkpoints, one file
+# ~400 MB). Populated automatically on the first prediction.
+.cache/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# A virtual environment created inside the service folder rather than at root
+.venv/
+venv/
+
+# Local overrides of DP_CXR_BUNDLE / DP_CXR_CACHE / HF_TOKEN
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# bundle/ IS TRACKED. It is the exported trained model (80 KB): the DP-trained
+# classification head, its thresholds, the pre-diagnostic text rule, the model
+# card and the SHA-256 manifest. Committing it is what makes `git clone` +
+# `bash setup.sh` run the demonstrated system with no extra downloads.
+# ---------------------------------------------------------------------------

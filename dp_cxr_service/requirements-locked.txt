@@ -1,0 +1,15 @@
+# Exact versions known to resolve together on Python 3.12.
+# Use only if requirements.txt fails:
+#     pip install -r dp_cxr_service/requirements-locked.txt
+torch==2.5.0
+torchvision==0.20.0
+transformers==4.44.2
+torchxrayvision==1.2.4
+tokenizers==0.19.1
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+pillow==10.4.0
+numpy==1.26.4
+matplotlib==3.9.2

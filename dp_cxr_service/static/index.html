@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DP-CXR — Privacy-Preserving Chest Radiograph Prediction</title>
+<style>
+  :root{
+    --teal:#12798F; --sea:#2EC4B6; --amb:#C2621B; --ink:#16242A;
+    --mut:#5C7078; --line:#DBE4E6; --tint:#F1F6F7; --ambl:#FDF1E4;
+    --pos:#0F766E; --neg:#94A3B8; --bg:#FBFCFD;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 26px;
+         display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+  header h1{margin:0;font-size:17px;letter-spacing:-.2px}
+  header .sub{color:var(--mut);font-size:12.5px}
+  .pill{font-size:11.5px;padding:3px 9px;border-radius:99px;font-weight:600;
+        background:var(--tint);color:var(--teal);border:1px solid #cfe3e7}
+  .pill.warnish{background:var(--ambl);color:var(--amb);border-color:#f0d9be}
+  .pill.bad{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+  .dot{width:8px;height:8px;border-radius:99px;background:var(--neg);display:inline-block;
+       margin-right:6px;vertical-align:middle}
+  .dot.live{background:var(--sea)} .dot.down{background:#ef4444}
+  main{max-width:1220px;margin:22px auto;padding:0 22px;display:grid;
+       grid-template-columns:400px 1fr;gap:22px;align-items:start}
+  @media(max-width:960px){main{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;
+        margin-bottom:18px}
+  .card h2{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.7px;
+           color:var(--mut);font-weight:700}
+  label{display:block;font-size:12.5px;font-weight:600;margin:0 0 6px;color:var(--ink)}
+  #drop{border:2px dashed var(--line);border-radius:9px;padding:26px 14px;text-align:center;
+        cursor:pointer;transition:.15s;background:var(--tint)}
+  #drop:hover,#drop.over{border-color:var(--teal);background:#eaf4f6}
+  #drop p{margin:6px 0 0;color:var(--mut);font-size:12.5px}
+  #drop strong{color:var(--teal)}
+  #thumbWrap{display:none;margin-top:10px;position:relative}
+  #thumb{width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+  #clearImg{position:absolute;top:7px;right:7px;background:rgba(22,36,42,.82);color:#fff;
+            border:0;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11.5px}
+  textarea{width:100%;min-height:132px;padding:10px;border:1px solid var(--line);
+           border-radius:8px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+           resize:vertical;color:var(--ink)}
+  textarea:focus,#drop:focus{outline:2px solid var(--sea);outline-offset:1px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
+  button.go{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:11px 18px;
+            font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:14px}
+  button.go:hover{background:#0e6478}
+  button.go:disabled{background:#9db8bf;cursor:not-allowed}
+  button.link{background:none;border:0;color:var(--teal);cursor:pointer;font-size:12.5px;
+              padding:0;text-decoration:underline}
+  /* ── findings ───────────────────────────────────────────────────────── */
+  .finding{padding:11px 0;border-bottom:1px solid #eef3f4}
+  .finding:last-child{border-bottom:0}
+  .fhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .fname{font-weight:600;font-size:14px}
+  .fprob{font-variant-numeric:tabular-nums;font-size:14px;font-weight:700}
+  .verdict{font-size:11px;font-weight:700;letter-spacing:.5px;padding:2px 8px;
+           border-radius:99px;text-transform:uppercase}
+  .verdict.yes{background:#ccfbf1;color:var(--pos)}
+  .verdict.no{background:#f1f5f9;color:#64748b}
+  .posline{font-size:13px;font-weight:600;margin:0 0 12px;padding:8px 11px;border-radius:7px;
+           background:#ccfbf1;color:var(--pos)}
+  .posline.none{background:#f1f5f9;color:#64748b}
+  /* the probability bar is scaled to the visible range -- with probabilities of
+     ~0.02-0.35 a 0-1 bar would render every finding as a sliver near zero */
+  .track{position:relative;height:9px;background:#eef2f4;border-radius:99px;margin-top:8px}
+  .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--neg)}
+  .fill.yes{background:var(--pos)}
+  .legend{font-size:11.5px;color:var(--mut);margin-top:10px;display:flex;gap:14px;flex-wrap:wrap}
+  /* ── misc ───────────────────────────────────────────────────────────── */
+  .warn{background:var(--ambl);border-left:3px solid var(--amb);padding:9px 12px;
+        border-radius:5px;font-size:12.5px;margin-bottom:7px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:700px){.grid2{grid-template-columns:1fr}}
+  .cam{width:100%;border-radius:8px;border:1px solid var(--line)}
+  .tok{display:inline-block;padding:3px 7px;margin:2px;border-radius:5px;font-size:12.5px;
+       font-family:ui-monospace,Menlo,monospace;border:1px solid #e2eaec}
+  table.meta{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.meta td{padding:5px 0;border-bottom:1px solid #f0f4f5;vertical-align:top}
+  table.meta td:first-child{color:var(--mut);width:44%}
+  table.meta td:last-child{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+  .note{font-size:11.5px;color:var(--mut);margin-top:9px;line-height:1.5}
+  .empty{text-align:center;padding:56px 20px;color:var(--mut)}
+  .empty svg{opacity:.32}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.35);
+        border-top-color:#fff;border-radius:99px;animation:sp .7s linear infinite;
+        margin-right:7px;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  footer{max-width:1220px;margin:0 auto 40px;padding:0 22px}
+  .disclaimer{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;padding:11px 14px;
+              border-radius:8px;font-size:12.5px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DP-CXR</h1>
+  <span class="sub">Differentially private multimodal chest radiograph prediction</span>
+  <span style="flex:1"></span>
+  <span class="pill" id="healthPill"><span class="dot" id="healthDot"></span><span id="healthTxt">checking…</span></span>
+  <span class="pill" id="epsPill" style="display:none"></span>
+  <a class="pill" href="/docs" style="text-decoration:none">API docs</a>
+</header>
+
+<main>
+  <!-- ── input ─────────────────────────────────────────────────────────── -->
+  <div>
+    <div class="card">
+      <h2>Frontal radiograph</h2>
+      <div id="drop" tabindex="0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#12798F"
+             stroke-width="1.6"><path d="M12 16V4m0 0L8 8m4-4 4 4"/>
+             <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <p><strong>Click to choose</strong> or drag an image here</p>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden>
+      <div id="thumbWrap"><img id="thumb" alt="selected radiograph">
+        <button id="clearImg">Remove</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Report text</h2>
+      <label for="report">Pre-diagnostic sections only</label>
+      <textarea id="report" placeholder="CLINICAL HISTORY: …&#10;INDICATION: …&#10;TECHNIQUE: …"></textarea>
+      <div class="row">
+        <button class="link" id="sample">Insert a sample report</button>
+        <button class="link" id="clearTxt">Clear</button>
+      </div>
+      <p class="note">Paste a full report if you like — Findings and Impression are
+        stripped server-side, exactly as during training. Whatever survives that rule
+        is shown back to you after prediction.</p>
+    </div>
+
+    <button class="go" id="go">Predict</button>
+    <p class="note" style="text-align:center">Supply an image, a report, or both.</p>
+  </div>
+
+  <!-- ── output ────────────────────────────────────────────────────────── -->
+  <div id="out">
+    <div class="card"><div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5C7078"
+           stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/>
+           <path d="M3 14l4-4 4 4 3-3 4 4"/></svg>
+      <p>Results will appear here.</p>
+    </div></div>
+  </div>
+</main>
+
+<footer>
+  <div class="disclaimer"><strong>Not a medical device.</strong> Research demonstration
+  for an MSc dissertation. Trained on one institution's data with labels derived from
+  report text. Outputs are not a diagnosis and must not be used to inform patient care.</div>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+let imgFile = null;
+
+const SAMPLE = `CLINICAL HISTORY: 58-year-old male with acute shortness of breath and fever.
+INDICATION: Rule out infection.
+TECHNIQUE: Frontal AP portable chest radiograph.
+COMPARISON: Prior study dated 2 January.`;
+
+/* ── health ─────────────────────────────────────────────────────────────── */
+fetch('/health').then(r => r.json()).then(h => {
+  if (h.bundle_loaded) {
+    $('#healthDot').className = 'dot live';
+    $('#healthTxt').textContent = h.model || 'model loaded';
+    if (h.epsilon != null) {
+      const p = $('#epsPill');
+      p.textContent = 'ε = ' + Number(h.epsilon).toFixed(2);
+      p.style.display = '';
+    }
+  } else {
+    $('#healthPill').className = 'pill bad';
+    $('#healthDot').className = 'dot down';
+    $('#healthTxt').textContent = 'no model bundle';
+  }
+}).catch(() => {
+  $('#healthPill').className = 'pill bad';
+  $('#healthDot').className = 'dot down';
+  $('#healthTxt').textContent = 'service unreachable';
+});
+
+/* ── image input ────────────────────────────────────────────────────────── */
+const drop = $('#drop');
+drop.onclick = () => $('#file').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#file').click(); } };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => {
+  e.preventDefault(); drop.classList.remove('over');
+  if (e.dataTransfer.files[0]) setImage(e.dataTransfer.files[0]);
+};
+$('#file').onchange = e => { if (e.target.files[0]) setImage(e.target.files[0]); };
+$('#clearImg').onclick = e => {
+  e.stopPropagation(); imgFile = null; $('#file').value = '';
+  $('#thumbWrap').style.display = 'none'; drop.style.display = '';
+};
+function setImage(f) {
+  if (!f.type.startsWith('image/')) { alert('That is not an image file.'); return; }
+  imgFile = f;
+  const r = new FileReader();
+  r.onload = ev => {
+    $('#thumb').src = ev.target.result;
+    $('#thumbWrap').style.display = 'block';
+    drop.style.display = 'none';
+  };
+  r.readAsDataURL(f);
+}
+$('#sample').onclick = () => $('#report').value = SAMPLE;
+$('#clearTxt').onclick = () => $('#report').value = '';
+
+/* ── predict ────────────────────────────────────────────────────────────── */
+$('#go').onclick = async () => {
+  const txt = $('#report').value.trim();
+  if (!imgFile && !txt) { alert('Supply a radiograph, report text, or both.'); return; }
+
+  const btn = $('#go');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Predicting…';
+  $('#out').innerHTML = `<div class="card"><div class="empty">
+      <p>Running the model…<br><span style="font-size:12px">
+      The first request downloads the encoders and can take a minute.</span></p></div></div>`;
+
+  const fd = new FormData();
+  if (imgFile) fd.append('image', imgFile);
+  if (txt) fd.append('report_text', txt);
+
+  try {
+    const res = await fetch('/predict', { method: 'POST', body: fd });
+    // Read as text first. A 500 can return an HTML error page, and calling
+    // res.json() on that throws a parser error that hides the real message.
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`HTTP ${res.status} — server said:\n${raw.slice(0, 600)}`); }
+    if (!res.ok) throw new Error(
+      (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail))
+      || ('HTTP ' + res.status));
+    render(data);
+  } catch (err) {
+    $('#out').innerHTML = `<div class="card"><h2>Request failed</h2>
+      <div class="warn" style="white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;
+           font-size:12px">${esc(err.message)}</div>
+      <p class="note">If this says the bundle is not loaded, check the terminal
+      running the service and re-run <code>preflight.py</code>.</p></div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Predict';
+  }
+};
+
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function render(d) {
+  const preds = d.predictions || [];
+  // Scale the bars to the visible probability range rather than 0-1. These
+  // findings are rare, so probabilities run ~0.02-0.35; a 0-1 axis would
+  // compress every finding into an unreadable sliver near zero.
+  const span = Math.max(0.35, ...preds.map(p => p.probability * 1.25));
+  const pct = v => Math.min(100, (v / span) * 100);
+  const positives = preds.filter(p => p.positive);
+
+  let html = '';
+
+  if (d.warnings && d.warnings.length)
+    html += `<div class="card"><h2>Notes on this request</h2>` +
+      d.warnings.map(w => `<div class="warn">${esc(w)}</div>`).join('') + `</div>`;
+
+  html += `<div class="card"><h2>Findings</h2>
+    <div class="posline${positives.length ? '' : ' none'}">${
+      positives.length ? 'Positive: ' + positives.map(p => esc(p.label)).join(', ')
+                       : 'No positive findings'}</div>` + preds.map(p => `
+    <div class="finding">
+      <div class="fhead">
+        <span class="fname">${esc(p.label)}</span>
+        <span>
+          <span class="fprob">${p.probability.toFixed(3)}</span>
+          <span class="verdict ${p.positive ? 'yes' : 'no'}">${p.positive ? 'Positive' : 'Negative'}</span>
+        </span>
+      </div>
+      <div class="track">
+        <div class="fill ${p.positive ? 'yes' : ''}" style="width:${pct(p.probability)}%"></div>
+      </div>
+    </div>`).join('') + `
+    <div class="legend"><span>modalities used: ${(d.modalities_used || []).join(' + ') || 'none'}</span>
+      ${d.inference_ms ? `<span>${d.inference_ms} ms</span>` : ''}</div>
+    <p class="note">Each finding is flagged Positive or Negative automatically. Probabilities
+    are low because these conditions are uncommon (1.9–12.4 % of studies), so the model is
+    calibrated to their true prevalence rather than to 50 %.</p>
+  </div>`;
+
+  const ex = d.explanations || {};
+  if (ex.gradcam || (ex.token_attribution && ex.token_attribution.tokens)) {
+    html += `<div class="card"><h2>Explanation</h2><div class="grid2">`;
+    if (ex.gradcam) {
+      html += `<div><label>Grad-CAM — ${esc(ex.gradcam.label)}</label>
+        <img class="cam" src="${ex.gradcam.overlay_png}" alt="Grad-CAM overlay">
+        <p class="note">${esc(ex.gradcam.note || '')}</p></div>`;
+    }
+    const toks = (ex.token_attribution && ex.token_attribution.tokens) || [];
+    if (toks.length) {
+      const mx = Math.max(...toks.map(t => t.influence)) || 1;
+      html += `<div><label>Token influence</label><div>` + toks.map(t => {
+        const a = 0.10 + 0.68 * (t.influence / mx);
+        return `<span class="tok" style="background:rgba(46,196,182,${a.toFixed(2)})"
+                 title="influence ${t.influence.toExponential(2)}">${esc(t.token)}</span>`;
+      }).join('') + `</div><p class="note">${esc(ex.token_attribution.note || '')}</p></div>`;
+    }
+    html += `</div>`;
+    if (ex.modality_contribution) {
+      const m = ex.modality_contribution;
+      html += `<table class="meta" style="margin-top:14px">
+        <tr><td>Shift when text is withheld</td><td>${m.image_only_shift.toFixed(4)}</td></tr>
+        <tr><td>Shift when image is withheld</td><td>${m.text_only_shift.toFixed(4)}</td></tr>
+        </table><p class="note">${esc(m.note || '')}</p>`;
+    }
+    html += `</div>`;
+  }
+
+  if (d.text_processing) {
+    const t = d.text_processing;
+    html += `<div class="card"><h2>Text the model actually saw</h2>
+      <div style="background:var(--tint);border-radius:7px;padding:11px;font-size:13px;
+                  font-family:ui-monospace,Menlo,monospace">${esc(t.text) || '<em>nothing</em>'}</div>
+      <table class="meta" style="margin-top:11px">
+        <tr><td>Recognised section headers</td><td>${t.had_sections ? 'yes' : 'no'}</td></tr>
+        <tr><td>Characters submitted → kept</td><td>${t.original_chars} → ${t.kept_chars}</td></tr>
+      </table>
+      <p class="note">The leakage control from the thesis, enforced at prediction time:
+      Findings and Impression are removed, because the training labels were derived
+      from them.</p></div>`;
+  }
+
+  const md = d.model_metadata;
+  if (md) {
+    const pv = md.privacy || {}, cal = md.calibration || {};
+    const f = (v, n = 4) => (v == null ? '—' : Number(v).toFixed(n));
+    html += `<div class="card"><h2>Model and privacy</h2><table class="meta">
+      <tr><td>Model</td><td>${esc(md.run_name)}</td></tr>
+      <tr><td>Fusion</td><td>${esc(md.fusion_type)}</td></tr>
+      <tr><td>Mechanism</td><td>${esc(pv.mechanism || '—')}</td></tr>
+      <tr><td>Placement</td><td>${esc(pv.placement || '—')}</td></tr>
+      <tr><td>Achieved ε</td><td>${f(pv.epsilon, 3)}</td></tr>
+      <tr><td>δ</td><td>${pv.delta ?? '—'}</td></tr>
+      <tr><td>Noise multiplier σ</td><td>${f(pv.noise_multiplier, 3)}</td></tr>
+      <tr><td>Test macro-AUROC</td><td>${f(md.test_macro_auroc)}</td></tr>
+      <tr><td>Expected calibration error</td><td>${f(cal.ece)}</td></tr>
+      </table><p class="note">${esc(cal.note || '')}</p></div>`;
+  }
+
+  $('#out').innerHTML = html;
+  $('#out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>

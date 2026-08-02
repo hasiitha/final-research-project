@@ -1,0 +1,26 @@
+{
+  "run_name": "dp_f_late_fusion_tuned",
+  "fusion_type": "late",
+  "labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Consolidation",
+    "Edema",
+    "Pleural Effusion"
+  ],
+  "num_classes": 5,
+  "img_size": 224,
+  "view_fusion": "max",
+  "use_lateral": false,
+  "img_feat_dim": 1024,
+  "bert_model": "emilyalsentzer/Bio_ClinicalBERT",
+  "max_text_len": 256,
+  "xrv_weights": "densenet121-res224-all",
+  "early_hidden": 256,
+  "early_dropout": 0.2,
+  "image_norm": {
+    "scheme": "xrv",
+    "scale": 2048.0,
+    "offset": -1024.0
+  }
+}

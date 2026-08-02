@@ -1,0 +1,26 @@
+{
+  "bundle_config.json": {
+    "bytes": 544,
+    "sha256": "58e37222bc63d279716eab79424444ae85971d254d60adabfaa3bb06b92dd2be"
+  },
+  "head_state_dict.pth": {
+    "bytes": 38317,
+    "sha256": "ab9f007d328ef7ef7b84be4a873d5a6aa800d45a44df3872d22ece8450c4146d"
+  },
+  "model_card.json": {
+    "bytes": 4409,
+    "sha256": "f1c6fb04517869520c15b1b04dfa4bb6944e555806e0091dc459339e6b29642a"
+  },
+  "selection_ranking.csv": {
+    "bytes": 8706,
+    "sha256": "66baa10454871f1475e889e71c6b0999f4e067f5188a60f8e55222174db6500a"
+  },
+  "text_rule.json": {
+    "bytes": 505,
+    "sha256": "30173cd3595070f3a1c555f869d4183ec0c62c75122f77c8c70388286ca7c8f8"
+  },
+  "thresholds.json": {
+    "bytes": 149,
+    "sha256": "8864ce68b138fa519cb418eb1476006fc2707ab1905d479870177c72c51fa4a2"
+  }
+}

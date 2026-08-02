@@ -1,0 +1,22 @@
+# Frontend-local rules. The repository root .gitignore covers the rest.
+
+# Dependency tree — recreate with `npm install` from package-lock.json
+node_modules/
+
+# Vite build output and cache
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp

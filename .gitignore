@@ -1,0 +1,124 @@
+# =============================================================================
+#  Application of Differential Privacy for Multimodal Healthcare Systems
+#  Hasitha Attanayake — IIT 20232040 / UoW W2053394
+#
+#  Everything the submission requires is tracked. Only virtual environments,
+#  dependency trees, download caches and OS/editor noise are excluded, and
+#  every one of those is reproducible from a file that IS tracked.
+#
+#  See the "deliberately tracked" note at the bottom before adding rules.
+# =============================================================================
+
+# --- Python virtual environments ---------------------------------------------
+# ~1.2 GB. Recreate with:
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install -r dp_cxr_service/requirements.txt
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# --- Python bytecode and build artefacts -------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+
+# --- Test, type and lint caches ----------------------------------------------
+# NOTE: this hides caches only. Test *files* and saved test *evidence* are
+# tracked — see the note at the bottom of this file.
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- Frozen-encoder download cache -------------------------------------------
+# ~830 MB of PUBLIC checkpoints (Bio_ClinicalBERT, TorchXRayVision
+# DenseNet-121). They download automatically on the first prediction, and one
+# file in here is ~400 MB — over GitHub's 100 MB per-file hard limit.
+# These are NOT project-trained weights; the trained head lives in
+# dp_cxr_service/bundle/ and IS committed.
+.cache/
+dp_cxr_service/.cache/
+
+# --- Node / Vite frontend ----------------------------------------------------
+# Recreate with:  cd dp_cxr_frontend && npm install
+node_modules/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Secrets and machine-local configuration ---------------------------------
+# The service needs no API keys, but HF_TOKEN / DP_CXR_BUNDLE may be set locally.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+secrets.json
+credentials.json
+
+# --- Notebooks ---------------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- Runtime output ----------------------------------------------------------
+*.log
+logs/
+tmp/
+
+# --- Operating system --------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Editors and IDEs --------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# =============================================================================
+#  DELIBERATELY TRACKED — required by the source-code submission brief.
+#  Do not add any of these to the rules above.
+#
+#  Trained model files (80 KB total, well inside the file-size limit)
+#    dp_cxr_service/bundle/head_state_dict.pth   the only trained weights
+#    dp_cxr_service/bundle/bundle_config.json    architecture + tokenizer
+#    dp_cxr_service/bundle/thresholds.json       validation-tuned thresholds
+#    dp_cxr_service/bundle/text_rule.json        pre-diagnostic section regex
+#    dp_cxr_service/bundle/model_card.json       achieved epsilon, metrics
+#    dp_cxr_service/bundle/selection_ranking.csv run selection evidence
+#    dp_cxr_service/bundle/MANIFEST.json         SHA-256 of every bundle file
+#
+#  Configuration and deployment
+#    dp_cxr_service/Dockerfile, setup.sh, run.sh
+#    dp_cxr_frontend/vite.config.js
+#
+#  Dependency / package files
+#    dp_cxr_service/requirements.txt, requirements-locked.txt
+#    dp_cxr_frontend/package.json, package-lock.json
+#
+#  Tests and test evidence
+#    dp_cxr_service/test_client.py, dp_cxr_service/diagnose.py
+#    any tests/ or test_evidence/ directory you add
+# =============================================================================
