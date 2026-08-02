@@ -302,6 +302,3 @@ Every experiment's configuration, metrics and model weights are saved in `reprod
 
 The full background study, methodology, results and critical evaluation are in the dissertation *"Application of Differential Privacy for Multimodal Healthcare Systems."* For service-specific details (full response schema, the three inference behaviours, troubleshooting), see `dp_cxr_service/README.md`, `dp_cxr_service/RUNBOOK.md`, and `dp_cxr_service/SETUP_FROM_SCRATCH.md`.
 
----
-
-*Academic project — Informatics Institute of Technology, in collaboration with the University of Westminster, 2026.*
